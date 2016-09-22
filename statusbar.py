@@ -98,7 +98,7 @@ def get_cpu():
 stripname = lambda s, n: int(s.strip(n + ': kB\n'))
 def get_ram():
     total = 0
-    used = []
+    free = []
 
     with open('/proc/meminfo') as meminfo:
         lines = meminfo.read()
@@ -108,14 +108,32 @@ def get_ram():
         if 'MemTotal' in line:
             total = stripname(line, 'MemTotal')
         elif 'MemFree' in line:
-            used.append(stripname(line, 'MemFree'))
+            free.append(stripname(line, 'MemFree'))
         elif 'Buffers' in line:
-            used.append(stripname(line, 'Buffers'))
+            free.append(stripname(line, 'Buffers'))
         elif 'Cached' in line and 'Swap' not in line:
-            used.append(stripname(line, 'Cached'))
-    return 1 - sum(used)/total
+            free.append(stripname(line, 'Cached'))
+    return 1 - sum(free)/total
 
 def get_health_timer():
+    pass
+
+def dzen_workspaces():
+    pass
+
+def dzen_time(t):
+    return t
+
+def dzen_traffic(r, t):
+    return '⬇ {}  ⬆ {}'.format(nice_convert(r), nice_convert(t))
+
+def dzen_cpu(c):
+    return ' '.join(['{:.0%}'.format(x) for x in c])
+
+def dzen_ram(m):
+    return '{:.0%}'.format(m)
+
+def dzen_statusline(time, traffic, cpu, memory)
     pass
 
 def main():
@@ -155,6 +173,8 @@ def main():
 
         # RAM
         ram = get_ram()
+
+        # Format
 
         sleep(1)
 
