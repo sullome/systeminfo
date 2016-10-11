@@ -4,31 +4,14 @@ from json import loads
 from datetime import datetime
 from re import match
 from locale import setlocale, LC_ALL, getlocale
-from time import sleep
+from time import sleep, perf_counter
 
 # Set locale to user's default
 setlocale(LC_ALL, '')
 
 def get_workspaces():
-    workspaces = run('i3-msd -t get_workspaces'.split(), stdout = PIPE).stdout
-    workspaces = loads(workspaces.decode())
-
-    for i in range(len(workspaces)):
-        workspace = workspaces[i]
-        dzen_ws = workspace['name']
-        if workspace['focused']:
-            pass
-        else:
-            pass
-        if workspace['urgent']:
-            pass
-        else:
-            pass
-        command = 'i3-msg workspace num {}'.format(workspace['num'])
-        dzen_ws = '^ca(1,{}){}^ca()'.format(command, dzen_ws)
-        #TODO: ПКМ по тэгу - показать список окон на нём
-        workspaces[i] = dzen_ws
-    return ' '.join(workspaces)
+    workspaces = run('i3-msg -t get_workspaces'.split(), stdout = PIPE).stdout
+    return loads(workspaces.decode())
 
 def get_time():
     dt = datetime.now()
@@ -118,8 +101,25 @@ def get_ram():
 def get_health_timer():
     pass
 
-def dzen_workspaces():
-    pass
+def dzen_workspaces(workspaces):
+    focused_bg = '#000055'
+    urgent_fg  = '#a05040'
+    for i in range(len(workspaces)):
+        workspace = workspaces[i]
+        dzen_ws = workspace['name']
+        if workspace['focused']:
+            dzen_ws = '^bg({}){}^bg()'.format(focused_bg, dzen_ws)
+        else:
+            pass
+        if workspace['urgent']:
+            dzen_ws = '^fg({}){}^fg()'.format(urgent_fg, dzen_ws)
+        else:
+            pass
+        command = 'i3-msg workspace num ' + workspace['num']
+        dzen_ws = '^ca(1,{}){}^ca()'.format(command, dzen_ws)
+        #TODO: ПКМ по тэгу - показать список окон на нём
+        workspaces[i] = dzen_ws
+    return ' '.join(workspaces)
 
 def dzen_time(t):
     return t
@@ -133,8 +133,14 @@ def dzen_cpu(c):
 def dzen_ram(m):
     return '{:.0%}'.format(m)
 
-def dzen_statusline(time, traffic, cpu, memory)
-    pass
+def dzen_statusline(ws, time, traffic, cpu, memory, sep = '|'):
+    #bg = '#0000aa'
+    #fg = '#bbbbbb'
+    #default = '^bg({})^fg({})'.format(bg, fg)
+    left = ws
+    center = '^p(_CENTER)' + time
+    right = '^p(_RIGHT)' + sep.join(traffic, cpu, memory)
+    return left + center + right
 
 def main():
     # Init
@@ -175,6 +181,14 @@ def main():
         ram = get_ram()
 
         # Format
+        statusline = dzen_statusline(
+            dzen_workspaces(ws),
+            dzen_time(time),
+            dzen_traffic(traffic),
+            dzen_cpu(cpu_load),
+            dzen_ram(ram)
+            )
+        print(statusline, flush = True)
 
         sleep(1)
 
