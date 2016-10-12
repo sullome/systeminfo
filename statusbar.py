@@ -10,7 +10,8 @@ from time import sleep, perf_counter
 setlocale(LC_ALL, '')
 
 def get_workspaces():
-    workspaces = run('i3-msg -t get_workspaces'.split(), stdout = PIPE).stdout
+    #workspaces = run('i3-msg -t get_workspaces'.split(), stdout = PIPE).stdout
+    workspaces = run('cat /home/sullome/workspaces_format_sway'.split(), stdout = PIPE).stdout
     return loads(workspaces.decode())
 
 def get_time():
@@ -115,7 +116,7 @@ def dzen_workspaces(workspaces):
             dzen_ws = '^fg({}){}^fg()'.format(urgent_fg, dzen_ws)
         else:
             pass
-        command = 'i3-msg workspace num ' + workspace['num']
+        command = 'i3-msg workspace num ' + str(workspace['num'])
         dzen_ws = '^ca(1,{}){}^ca()'.format(command, dzen_ws)
         #TODO: ПКМ по тэгу - показать список окон на нём
         workspaces[i] = dzen_ws
@@ -139,7 +140,7 @@ def dzen_statusline(ws, time, traffic, cpu, memory, sep = '|'):
     #default = '^bg({})^fg({})'.format(bg, fg)
     left = ws
     center = '^p(_CENTER)' + time
-    right = '^p(_RIGHT)' + sep.join(traffic, cpu, memory)
+    right = '^p(_RIGHT)' + sep.join([traffic, cpu, memory])
     return left + center + right
 
 def main():
@@ -171,9 +172,12 @@ def main():
         for i in range(len(cpu)):
             work = cpu[i][0] - prev_cpu[i][0]
             total= cpu[i][1] - prev_cpu[i][1]
-            load = work / total
-            if l > 1: l = 1
-            cpu_load[i] = load
+            if total == 0:
+                load = 0
+            else:
+                load = work / total
+            if load > 1: load = 1
+            cpu_load.insert(i, load)
 
         prev_cpu = cpu
 
@@ -184,7 +188,7 @@ def main():
         statusline = dzen_statusline(
             dzen_workspaces(ws),
             dzen_time(time),
-            dzen_traffic(traffic),
+            dzen_traffic(receive, transmit),
             dzen_cpu(cpu_load),
             dzen_ram(ram)
             )
