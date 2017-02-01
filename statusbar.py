@@ -118,6 +118,9 @@ def get_ram():
 def get_health_timer():
     pass
 
+def dzen_format(workspaces, time, receive, transmit, cpu, ram):
+    pass
+
 def main():
     # Init
     current_time = perf_counter()
